@@ -149,7 +149,7 @@ body {
 /* 大屏布局配置 */
 .kpi-dashboard {
     grid-column: 1 / -1;
-    height: 200px;
+    height: fit-content;
 }
 
 .geo-analysis {
@@ -161,13 +161,13 @@ body {
 .performance-monitor {
     grid-column: 2 / 3;
     grid-row: 2 / 3;
-    height: 280px;
+    height: fit-content;
 }
 
 .economic-analysis {
     grid-column: 2 / 3;
     grid-row: 3 / 4;
-    height: 290px;
+    height: fit-content;
 }
 
 .ai-prediction {

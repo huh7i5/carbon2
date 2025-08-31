@@ -14,8 +14,14 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     
-    <!-- 高德地图API -->
-    <script src="https://webapi.amap.com/maps?v=2.0&key=ec8bd2f50328bddc6a67a4e881f4adfb"></script>
+    <!-- 高德地图API安全密钥配置 -->
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode: "6048d86b12ebfa706956ecda48abae64",
+        };
+    </script>
+    <!-- 高德地图API Loader -->
+    <script src="https://webapi.amap.com/loader.js"></script>
     
     <!-- 字体图标 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

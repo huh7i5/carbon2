@@ -2,28 +2,36 @@
 class MapManager {
     constructor() {
         this.map = null;
+        this.AMap = null; // 保存AMap对象
         this.markers = [];
         this.isInitialized = false;
     }
 
     // 初始化地图
-    init() {
+    async init() {
         const mapContainer = document.getElementById('mapContainer');
         if (!mapContainer) {
             console.error('地图容器未找到');
             return;
         }
 
-        // 检查高德地图API是否可用
-        if (typeof AMap === 'undefined') {
-            console.warn('高德地图API未加载，显示占位符');
+        // 检查AMapLoader是否可用
+        if (typeof AMapLoader === 'undefined') {
+            console.warn('AMapLoader未加载，显示占位符');
             this.showMapPlaceholder();
             return;
         }
 
         try {
+            // 使用AMapLoader加载高德地图API
+            this.AMap = await AMapLoader.load({
+                key: window.CONFIG?.AMAP?.KEY || "ec8bd2f50328bddc6a67a4e881f4adfb",
+                version: "2.0",
+                plugins: ['AMap.Scale', 'AMap.ToolBar'] // 需要使用的插件列表
+            });
+
             // 初始化地图实例
-            this.map = new AMap.Map('mapContainer', {
+            this.map = new this.AMap.Map('mapContainer', {
                 center: window.CONFIG?.AMAP?.CENTER || [121.783333, 30.866667],
                 zoom: window.CONFIG?.AMAP?.ZOOM || 12,
                 mapStyle: 'amap://styles/darkblue', // 深色主题
@@ -31,8 +39,8 @@ class MapManager {
             });
 
             // 添加控件
-            this.map.addControl(new AMap.Scale());
-            this.map.addControl(new AMap.ToolBar());
+            this.map.addControl(new this.AMap.Scale());
+            this.map.addControl(new this.AMap.ToolBar());
 
             // 初始化标记点
             this.initializeMarkers();
@@ -95,20 +103,20 @@ class MapManager {
 
     // 添加CO2源点标记
     addSourceMarker(location) {
-        if (!this.map) return;
+        if (!this.map || !this.AMap) return;
 
-        const marker = new AMap.Marker({
+        const marker = new this.AMap.Marker({
             position: [location.lng, location.lat],
             title: location.name,
-            icon: new AMap.Icon({
+            icon: new this.AMap.Icon({
                 image: 'data:image/svg+xml;base64,' + btoa(`
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
                         <circle cx="16" cy="16" r="12" fill="#00d4aa" stroke="#ffffff" stroke-width="2"/>
                         <text x="16" y="20" text-anchor="middle" fill="white" font-size="12" font-family="Arial">🏭</text>
                     </svg>
                 `),
-                size: new AMap.Size(32, 32),
-                imageOffset: new AMap.Pixel(-16, -16)
+                size: new this.AMap.Size(32, 32),
+                imageOffset: new this.AMap.Pixel(-16, -16)
             })
         });
 
@@ -123,7 +131,7 @@ class MapManager {
 
     // 添加存储点标记
     addStorageMarker(location) {
-        if (!this.map) return;
+        if (!this.map || !this.AMap) return;
 
         const colors = {
             storage: '#ff6b6b',
@@ -140,18 +148,18 @@ class MapManager {
         const color = colors[location.type] || '#00d4aa';
         const icon = icons[location.type] || '📍';
 
-        const marker = new AMap.Marker({
+        const marker = new this.AMap.Marker({
             position: [location.lng, location.lat],
             title: location.name,
-            icon: new AMap.Icon({
+            icon: new this.AMap.Icon({
                 image: 'data:image/svg+xml;base64,' + btoa(`
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
                         <circle cx="14" cy="14" r="10" fill="${color}" stroke="#ffffff" stroke-width="2"/>
                         <text x="14" y="18" text-anchor="middle" fill="white" font-size="10" font-family="Arial">${icon}</text>
                     </svg>
                 `),
-                size: new AMap.Size(28, 28),
-                imageOffset: new AMap.Pixel(-14, -14)
+                size: new this.AMap.Size(28, 28),
+                imageOffset: new this.AMap.Pixel(-14, -14)
             })
         });
 
@@ -267,9 +275,9 @@ class MapManager {
 
     // 绘制路线
     drawRoute(route) {
-        if (!this.map) return;
+        if (!this.map || !this.AMap) return;
 
-        const polyline = new AMap.Polyline({
+        const polyline = new this.AMap.Polyline({
             path: [route.from, route.to],
             strokeColor: route.type === 'methanol' ? '#ffc107' : '#2196f3',
             strokeWeight: 4,
