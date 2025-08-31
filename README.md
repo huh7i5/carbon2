@@ -146,11 +146,7 @@ python src/main/python/data_generation/generate_mock_data.py
 
 ## 联系信息
 
-- **项目负责人**: [您的姓名]
+- **项目负责人**: [crandler]
 - **GitHub仓库**: https://github.com/huh7i5/carbon2.git
-- **技术支持**: 基于Claude Code开发助手
+- **技术支持**: 感恩Claude Code
 
----
-
-🤖 **Generated with Claude Code**  
-📺 **Template by Chang Ho Chien | HC AI 說人話channel | v1.0.0**

@@ -1,0 +1,352 @@
+/* KPI仪表盘样式 */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    height: 100%;
+}
+
+.kpi-card {
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.1) 0%, rgba(0, 122, 140, 0.1) 100%);
+    border: 1px solid rgba(0, 212, 170, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #00d4aa 0%, #007a8c 100%);
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 212, 170, 0.2);
+    border-color: rgba(0, 212, 170, 0.4);
+}
+
+.kpi-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 212, 170, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.kpi-icon i {
+    font-size: 28px;
+    color: #00d4aa;
+}
+
+.kpi-content {
+    flex: 1;
+}
+
+.kpi-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 5px;
+}
+
+.kpi-label {
+    font-size: 14px;
+    color: #a0a0a0;
+    margin-bottom: 8px;
+}
+
+.kpi-change {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.kpi-change.positive {
+    color: #00d4aa;
+    background: rgba(0, 212, 170, 0.1);
+}
+
+.kpi-change.negative {
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.1);
+}
+
+/* 地理空间分析样式 */
+.geo-content {
+    display: flex;
+    gap: 20px;
+    height: calc(100% - 60px);
+}
+
+.map-container {
+    flex: 2;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.map-info-panel {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.location-info h3 {
+    color: #00d4aa;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.location-info p {
+    color: #a0a0a0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.map-controls {
+    display: flex;
+    gap: 10px;
+}
+
+/* 性能监控样式 */
+.performance-charts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    height: calc(100% - 60px);
+}
+
+.time-selector select {
+    min-width: 120px;
+}
+
+/* 经济分析样式 */
+.analysis-tabs {
+    display: flex;
+    gap: 10px;
+}
+
+.tab-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #a0a0a0;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    background: rgba(0, 212, 170, 0.2);
+    color: #00d4aa;
+}
+
+.economic-content {
+    height: calc(100% - 60px);
+}
+
+.chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    height: 100%;
+}
+
+.chart-container.half {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* AI预测模块样式 */
+.prediction-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.prediction-content {
+    display: flex;
+    gap: 20px;
+    height: calc(100% - 60px);
+}
+
+.prediction-chart {
+    flex: 2;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.prediction-metrics {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.metric-item {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.metric-label {
+    color: #a0a0a0;
+    font-size: 14px;
+}
+
+.metric-value {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.metric-value.trend-up {
+    color: #00d4aa;
+}
+
+.metric-value.trend-down {
+    color: #ff6b6b;
+}
+
+/* LLM智能解读样式 */
+.chart-selector select {
+    min-width: 140px;
+}
+
+.llm-content {
+    height: calc(100% - 60px);
+}
+
+.chat-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.message {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.message-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(0, 212, 170, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.message-avatar i {
+    color: #00d4aa;
+    font-size: 16px;
+}
+
+.message-content {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 15px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #ffffff;
+}
+
+.user-message {
+    flex-direction: row-reverse;
+}
+
+.user-message .message-avatar {
+    background: rgba(100, 100, 100, 0.1);
+}
+
+.user-message .message-avatar i {
+    color: #a0a0a0;
+}
+
+.user-message .message-content {
+    background: rgba(0, 212, 170, 0.1);
+    border: 1px solid rgba(0, 212, 170, 0.2);
+}
+
+.chat-input-container {
+    padding: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 10px;
+}
+
+#chatInput {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 15px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+#chatInput::placeholder {
+    color: #a0a0a0;
+}
+
+#sendButton {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #00d4aa 0%, #007a8c 100%);
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+#sendButton:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 212, 170, 0.3);
+}

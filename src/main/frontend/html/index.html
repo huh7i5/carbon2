@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沪碳智脑——上海化工园区CCU技术智能决策与分析平台</title>
+    
+    <!-- 外部CSS库 -->
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/components.css">
+    
+    <!-- 可视化库 -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <!-- 高德地图API -->
+    <script src="https://webapi.amap.com/maps?v=2.0&key=YOUR_AMAP_KEY"></script>
+    
+    <!-- 字体图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <h1>沪碳智脑</h1>
+                <span class="subtitle">上海化工园区CCU技术智能决策平台</span>
+            </div>
+            <div class="header-info">
+                <div class="current-time" id="currentTime"></div>
+                <div class="connection-status">
+                    <i class="fas fa-circle online"></i>
+                    <span>实时连接</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="dashboard">
+        <!-- 模块一：核心KPI仪表盘 -->
+        <section class="module kpi-dashboard">
+            <div class="module-header">
+                <h2><i class="fas fa-tachometer-alt"></i> 核心KPI仪表盘</h2>
+                <div class="refresh-btn" onclick="refreshKPI()">
+                    <i class="fas fa-sync-alt"></i>
+                </div>
+            </div>
+            <div class="kpi-grid">
+                <div class="kpi-card investment">
+                    <div class="kpi-icon">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value" id="totalInvestment">¥ 2.8亿</div>
+                        <div class="kpi-label">项目总投资</div>
+                        <div class="kpi-change positive">+2.5%</div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card capture">
+                    <div class="kpi-icon">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value" id="co2Capture">156.8 吨</div>
+                        <div class="kpi-label">实时CO2捕集量</div>
+                        <div class="kpi-change positive">+12.3%</div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card production">
+                    <div class="kpi-icon">
+                        <i class="fas fa-flask"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value" id="methanolProduction">24.6 吨</div>
+                        <div class="kpi-label">今日甲醇产量</div>
+                        <div class="kpi-change positive">+8.7%</div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card profit">
+                    <div class="kpi-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value" id="realTimeProfit">18.9 万元</div>
+                        <div class="kpi-label">实时运行利润</div>
+                        <div class="kpi-change positive">+15.2%</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 模块二：地理空间分析 -->
+        <section class="module geo-analysis">
+            <div class="module-header">
+                <h2><i class="fas fa-map-marked-alt"></i> 地理空间分析</h2>
+                <div class="map-controls">
+                    <button class="btn-secondary" onclick="showSources()">CO2源点</button>
+                    <button class="btn-secondary" onclick="showRoutes()">运输路线</button>
+                    <button class="btn-secondary" onclick="showStorage()">封存点</button>
+                </div>
+            </div>
+            <div class="geo-content">
+                <div id="mapContainer" class="map-container"></div>
+                <div class="map-info-panel">
+                    <div class="location-info" id="locationInfo">
+                        <h3>选择地点查看详情</h3>
+                        <p>点击地图上的标记点获取详细信息</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 模块三：技术性能监控 -->
+        <section class="module performance-monitor">
+            <div class="module-header">
+                <h2><i class="fas fa-chart-area"></i> 技术性能监控</h2>
+                <div class="time-selector">
+                    <select id="timeRange" onchange="updatePerformanceCharts()">
+                        <option value="24h">过去24小时</option>
+                        <option value="7d">过去7天</option>
+                        <option value="30d">过去30天</option>
+                    </select>
+                </div>
+            </div>
+            <div class="performance-charts">
+                <div class="chart-container">
+                    <div id="captureRateChart" class="chart"></div>
+                </div>
+                <div class="chart-container">
+                    <div id="energyConsumptionChart" class="chart"></div>
+                </div>
+                <div class="chart-container">
+                    <div id="solventFlowChart" class="chart"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 模块四：经济效益分析 -->
+        <section class="module economic-analysis">
+            <div class="module-header">
+                <h2><i class="fas fa-chart-pie"></i> 经济效益分析</h2>
+                <div class="analysis-tabs">
+                    <button class="tab-btn active" onclick="showCostBreakdown()">成本构成</button>
+                    <button class="tab-btn" onclick="showProfitTrend()">收益趋势</button>
+                </div>
+            </div>
+            <div class="economic-content">
+                <div class="chart-row">
+                    <div class="chart-container half">
+                        <div id="costPieChart" class="chart"></div>
+                    </div>
+                    <div class="chart-container half">
+                        <div id="profitBarChart" class="chart"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 模块五：AI预测模块 -->
+        <section class="module ai-prediction">
+            <div class="module-header">
+                <h2><i class="fas fa-brain"></i> AI预测模块</h2>
+                <div class="prediction-controls">
+                    <button class="btn-primary" onclick="runPrediction()">
+                        <i class="fas fa-play"></i> 运行预测
+                    </button>
+                    <select id="predictionModel">
+                        <option value="arima">ARIMA模型</option>
+                        <option value="lgbm">LightGBM模型</option>
+                    </select>
+                </div>
+            </div>
+            <div class="prediction-content">
+                <div class="prediction-chart">
+                    <div id="predictionChart" class="chart"></div>
+                </div>
+                <div class="prediction-metrics">
+                    <div class="metric-item">
+                        <span class="metric-label">预测准确率</span>
+                        <span class="metric-value" id="accuracy">94.2%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">下一小时预测</span>
+                        <span class="metric-value" id="nextHourPrediction">87.5%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">趋势方向</span>
+                        <span class="metric-value trend-up" id="trendDirection">上升</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 模块六：LLM智能解读 -->
+        <section class="module llm-analysis">
+            <div class="module-header">
+                <h2><i class="fas fa-comments"></i> LLM智能解读</h2>
+                <div class="chart-selector">
+                    <select id="chartSelector">
+                        <option value="kpi">KPI仪表盘</option>
+                        <option value="performance">技术性能</option>
+                        <option value="economic">经济效益</option>
+                        <option value="prediction">AI预测</option>
+                    </select>
+                </div>
+            </div>
+            <div class="llm-content">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message ai-message">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                您好！我是沪碳智脑AI助手。请选择一个图表模块，然后提问，我将为您解读当前的数据情况。
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" placeholder="请输入您想了解的问题..." />
+                        <button id="sendButton" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页面脚本 -->
+    <script src="../js/config.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/mockData.js"></script>
+    <script src="../js/charts.js"></script>
+    <script src="../js/map.js"></script>
+    <script src="../js/prediction.js"></script>
+    <script src="../js/llm.js"></script>
+    <script src="../js/main.js"></script>
+</body>
+</html>
