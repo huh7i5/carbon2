@@ -10,7 +10,7 @@ const CONFIG = {
 
     // 高德地图配置
     AMAP: {
-        KEY: 'YOUR_AMAP_KEY', // 请替换为您的高德地图API Key
+        KEY: 'ec8bd2f50328bddc6a67a4e881f4adfb', // 高德地图API Key
         VERSION: '2.0',
         CENTER: [121.783333, 30.866667], // 上海化学工业区坐标
         ZOOM: 12

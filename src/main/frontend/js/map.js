@@ -1,0 +1,307 @@
+// 地图管理模块
+class MapManager {
+    constructor() {
+        this.map = null;
+        this.markers = [];
+        this.isInitialized = false;
+    }
+
+    // 初始化地图
+    init() {
+        const mapContainer = document.getElementById('mapContainer');
+        if (!mapContainer) {
+            console.error('地图容器未找到');
+            return;
+        }
+
+        // 检查高德地图API是否可用
+        if (typeof AMap === 'undefined') {
+            console.warn('高德地图API未加载，显示占位符');
+            this.showMapPlaceholder();
+            return;
+        }
+
+        try {
+            // 初始化地图实例
+            this.map = new AMap.Map('mapContainer', {
+                center: window.CONFIG?.AMAP?.CENTER || [121.783333, 30.866667],
+                zoom: window.CONFIG?.AMAP?.ZOOM || 12,
+                mapStyle: 'amap://styles/darkblue', // 深色主题
+                viewMode: '2D'
+            });
+
+            // 添加控件
+            this.map.addControl(new AMap.Scale());
+            this.map.addControl(new AMap.ToolBar());
+
+            // 初始化标记点
+            this.initializeMarkers();
+
+            this.isInitialized = true;
+            console.log('地图初始化成功');
+
+        } catch (error) {
+            console.error('地图初始化失败:', error);
+            this.showMapPlaceholder();
+        }
+    }
+
+    // 显示地图占位符
+    showMapPlaceholder() {
+        const mapContainer = document.getElementById('mapContainer');
+        if (mapContainer) {
+            mapContainer.innerHTML = `
+                <div style="
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-direction: column;
+                    color: #a0a0a0;
+                    font-size: 16px;
+                    background: rgba(0, 0, 0, 0.3);
+                    border-radius: 8px;
+                ">
+                    <i class="fas fa-map" style="font-size: 48px; margin-bottom: 15px; color: #00d4aa;"></i>
+                    <div style="margin-bottom: 5px;">上海化工园区地理空间分析</div>
+                    <div style="font-size: 12px; color: #666;">
+                        地图模块 - 需要配置高德地图API Key
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px 15px; background: rgba(0, 212, 170, 0.1); border-radius: 4px; font-size: 11px;">
+                        <div>🗺️ CO2捕集源: 上海化学工业区</div>
+                        <div>📍 封存点: 东海CO2封存点A</div>
+                        <div>🚛 运输中心: 产品运输中心</div>
+                        <div>🏭 合作企业: 合作化工厂B</div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // 初始化标记点
+    initializeMarkers() {
+        if (!this.map || !window.MockData) return;
+
+        const geoData = window.MockData.getGeoData();
+
+        // 添加CO2捕集源标记
+        this.addSourceMarker(geoData.sourceLocation);
+
+        // 添加存储和运输点标记
+        geoData.storageLocations.forEach(location => {
+            this.addStorageMarker(location);
+        });
+    }
+
+    // 添加CO2源点标记
+    addSourceMarker(location) {
+        if (!this.map) return;
+
+        const marker = new AMap.Marker({
+            position: [location.lng, location.lat],
+            title: location.name,
+            icon: new AMap.Icon({
+                image: 'data:image/svg+xml;base64,' + btoa(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                        <circle cx="16" cy="16" r="12" fill="#00d4aa" stroke="#ffffff" stroke-width="2"/>
+                        <text x="16" y="20" text-anchor="middle" fill="white" font-size="12" font-family="Arial">🏭</text>
+                    </svg>
+                `),
+                size: new AMap.Size(32, 32),
+                imageOffset: new AMap.Pixel(-16, -16)
+            })
+        });
+
+        marker.setMap(this.map);
+        this.markers.push(marker);
+
+        // 添加点击事件
+        marker.on('click', () => {
+            this.showLocationInfo(location);
+        });
+    }
+
+    // 添加存储点标记
+    addStorageMarker(location) {
+        if (!this.map) return;
+
+        const colors = {
+            storage: '#ff6b6b',
+            transport: '#ffc107',
+            partner: '#2196f3'
+        };
+
+        const icons = {
+            storage: '🏭',
+            transport: '🚛',
+            partner: '🏢'
+        };
+
+        const color = colors[location.type] || '#00d4aa';
+        const icon = icons[location.type] || '📍';
+
+        const marker = new AMap.Marker({
+            position: [location.lng, location.lat],
+            title: location.name,
+            icon: new AMap.Icon({
+                image: 'data:image/svg+xml;base64,' + btoa(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+                        <circle cx="14" cy="14" r="10" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+                        <text x="14" y="18" text-anchor="middle" fill="white" font-size="10" font-family="Arial">${icon}</text>
+                    </svg>
+                `),
+                size: new AMap.Size(28, 28),
+                imageOffset: new AMap.Pixel(-14, -14)
+            })
+        });
+
+        marker.setMap(this.map);
+        this.markers.push(marker);
+
+        // 添加点击事件
+        marker.on('click', () => {
+            this.showLocationInfo(location);
+        });
+    }
+
+    // 显示位置信息
+    showLocationInfo(location) {
+        const infoPanel = document.getElementById('locationInfo');
+        if (!infoPanel) return;
+
+        const typeNames = {
+            source: 'CO2捕集源',
+            storage: 'CO2封存点',
+            transport: '运输中心',
+            partner: '合作企业'
+        };
+
+        const typeName = typeNames[location.type] || '地点';
+
+        let content = `
+            <h3 style="color: #00d4aa; margin-bottom: 10px;">
+                <i class="fas fa-map-marker-alt" style="margin-right: 5px;"></i>
+                ${location.name}
+            </h3>
+            <div style="color: #ffffff; margin-bottom: 8px;">
+                <strong>类型:</strong> ${typeName}
+            </div>
+            <div style="color: #a0a0a0; font-size: 14px; line-height: 1.4; margin-bottom: 10px;">
+                ${location.description || '暂无描述'}
+            </div>
+        `;
+
+        // 添加具体数据
+        if (location.captureRate) {
+            content += `
+                <div style="color: #a0a0a0; font-size: 13px; margin-bottom: 5px;">
+                    捕集率: <span style="color: #00d4aa;">${location.captureRate}%</span>
+                </div>
+                <div style="color: #a0a0a0; font-size: 13px; margin-bottom: 5px;">
+                    日捕集量: <span style="color: #00d4aa;">${location.dailyCapture} 吨</span>
+                </div>
+            `;
+        }
+
+        if (location.capacity) {
+            content += `
+                <div style="color: #a0a0a0; font-size: 13px; margin-bottom: 5px;">
+                    设计容量: <span style="color: #ffc107;">${location.capacity.toLocaleString()} 吨</span>
+                </div>
+            `;
+        }
+
+        if (location.currentStorage) {
+            content += `
+                <div style="color: #a0a0a0; font-size: 13px; margin-bottom: 5px;">
+                    当前存储: <span style="color: #2196f3;">${location.currentStorage.toLocaleString()} 吨</span>
+                </div>
+            `;
+        }
+
+        if (location.dailyThroughput) {
+            content += `
+                <div style="color: #a0a0a0; font-size: 13px; margin-bottom: 5px;">
+                    日处理量: <span style="color: #ffc107;">${location.dailyThroughput} 吨</span>
+                </div>
+            `;
+        }
+
+        if (location.monthlyDemand) {
+            content += `
+                <div style="color: #a0a0a0; font-size: 13px; margin-bottom: 5px;">
+                    月需求量: <span style="color: #2196f3;">${location.monthlyDemand.toLocaleString()} 吨</span>
+                </div>
+            `;
+        }
+
+        infoPanel.innerHTML = content;
+    }
+
+    // 显示CO2源点
+    showSources() {
+        // 高亮显示CO2源点
+        console.log('显示CO2源点');
+    }
+
+    // 显示运输路线
+    showRoutes() {
+        if (!this.map || !window.MockData) return;
+
+        // 清除现有路线
+        this.clearRoutes();
+
+        const geoData = window.MockData.getGeoData();
+        geoData.transportRoutes.forEach(route => {
+            this.drawRoute(route);
+        });
+
+        console.log('显示运输路线');
+    }
+
+    // 显示封存点
+    showStorage() {
+        // 高亮显示封存点
+        console.log('显示封存点');
+    }
+
+    // 绘制路线
+    drawRoute(route) {
+        if (!this.map) return;
+
+        const polyline = new AMap.Polyline({
+            path: [route.from, route.to],
+            strokeColor: route.type === 'methanol' ? '#ffc107' : '#2196f3',
+            strokeWeight: 4,
+            strokeOpacity: 0.8,
+            strokeStyle: 'dashed'
+        });
+
+        polyline.setMap(this.map);
+        this.routes = this.routes || [];
+        this.routes.push(polyline);
+    }
+
+    // 清除路线
+    clearRoutes() {
+        if (this.routes) {
+            this.routes.forEach(route => {
+                route.setMap(null);
+            });
+            this.routes = [];
+        }
+    }
+
+    // 销毁地图
+    destroy() {
+        if (this.map) {
+            this.map.destroy();
+            this.map = null;
+        }
+        this.markers = [];
+        this.isInitialized = false;
+    }
+}
+
+// 全局实例
+window.MapManager = new MapManager();
