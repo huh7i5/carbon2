@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地图调试工具 - 沪碳智脑</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a252f;
+            color: white;
+        }
+        
+        .debug-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            height: calc(100vh - 100px);
+        }
+        
+        #mapContainer {
+            border: 2px solid #00d4aa;
+            border-radius: 8px;
+        }
+        
+        .debug-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .status {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        
+        .status.loading {
+            background: rgba(255, 193, 7, 0.1);
+            border-color: #ffc107;
+            color: #ffc107;
+        }
+        
+        .status.success {
+            background: rgba(0, 212, 170, 0.1);
+            border-color: #00d4aa;
+            color: #00d4aa;
+        }
+        
+        .status.error {
+            background: rgba(255, 107, 107, 0.1);
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+        
+        .log {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: scroll;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 15px 0;
+        }
+        
+        .log-entry {
+            margin: 3px 0;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .log-entry.info { color: #a0a0a0; }
+        .log-entry.success { color: #00d4aa; }
+        .log-entry.warn { color: #ffc107; }
+        .log-entry.error { color: #ff6b6b; }
+        
+        .control-btn {
+            background: #00d4aa;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 5px 5px 0;
+            font-size: 12px;
+        }
+        
+        .control-btn:hover {
+            background: #007a8c;
+        }
+        
+        .control-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .info-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 212, 170, 0.05);
+            border-radius: 4px;
+        }
+        
+        .info-section h4 {
+            margin: 0 0 10px 0;
+            color: #00d4aa;
+        }
+    </style>
+</head>
+<body>
+    <h1>🗺️ 地图调试工具</h1>
+    <p>沪碳智脑地理空间分析模块调试界面</p>
+    
+    <div class="debug-container">
+        <div id="mapContainer"></div>
+        
+        <div class="debug-panel">
+            <div id="status" class="status loading">
+                正在初始化地图调试工具...
+            </div>
+            
+            <div class="info-section">
+                <h4>📍 预期标记点</h4>
+                <div id="expectedMarkers">
+                    <div>🏭 上海化工园区CO2捕集源</div>
+                    <div>🗄️ 东海CO2封存点A</div>
+                    <div>🚛 产品运输中心</div>
+                    <div>🏢 合作化工厂B</div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h4>🎛️ 调试控制</h4>
+                <button class="control-btn" onclick="reloadMap()">重新加载地图</button>
+                <button class="control-btn" onclick="clearLog()">清空日志</button>
+                <button class="control-btn" onclick="testMarkers()">测试标记点</button>
+                <button class="control-btn" onclick="showMapInfo()">显示地图信息</button>
+            </div>
+            
+            <div class="info-section">
+                <h4>📊 实时统计</h4>
+                <div>地图状态: <span id="mapStatus">未初始化</span></div>
+                <div>标记点数量: <span id="markerCount">0</span></div>
+                <div>初始化时间: <span id="initTime">-</span></div>
+            </div>
+            
+            <h4>📝 调试日志</h4>
+            <div id="debugLog" class="log"></div>
+        </div>
+    </div>
+    
+    <!-- 高德地图API安全密钥配置 -->
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode: "6048d86b12ebfa706956ecda48abae64",
+        };
+    </script>
+    
+    <!-- 高德地图API Loader -->
+    <script src="https://webapi.amap.com/loader.js"></script>
+    
+    <!-- 导入项目脚本 -->
+    <script src="src/main/frontend/js/config.js"></script>
+    <script src="src/main/frontend/js/mockData.js"></script>
+    <script src="src/main/frontend/js/map.js"></script>
+    
+    <script>
+        let initStartTime = Date.now();
+        
+        // 重写console方法以捕获日志
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        
+        console.log = (...args) => {
+            originalLog.apply(console, args);
+            addLogEntry('info', args.join(' '));
+        };
+        
+        console.warn = (...args) => {
+            originalWarn.apply(console, args);
+            addLogEntry('warn', args.join(' '));
+        };
+        
+        console.error = (...args) => {
+            originalError.apply(console, args);
+            addLogEntry('error', args.join(' '));
+        };
+        
+        function addLogEntry(type, message) {
+            const log = document.getElementById('debugLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+        
+        function updateStats() {
+            document.getElementById('mapStatus') = window.MapManager?.isInitialized ? '已初始化' : '未初始化';
+            document.getElementById('markerCount').textContent = window.MapManager?.markers?.length || 0;
+            
+            if (window.MapManager?.isInitialized) {
+                const initTime = (Date.now() - initStartTime) / 1000;
+                document.getElementById('initTime').textContent = `${initTime.toFixed(2)}秒`;
+            }
+        }
+        
+        function reloadMap() {
+            updateStatus('重新加载地图中...', 'loading');
+            if (window.MapManager) {
+                window.MapManager.destroy();
+                setTimeout(() => {
+                    initStartTime = Date.now();
+                    window.MapManager.init();
+                }, 1000);
+            }
+        }
+        
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '';
+        }
+        
+        function testMarkers() {
+            if (!window.MapManager?.isInitialized) {
+                addLogEntry('warn', '地图未初始化，无法测试标记点');
+                return;
+            }
+            
+            const markers = window.MapManager.markers;
+            addLogEntry('info', `当前标记点数量: ${markers.length}`);
+            
+            markers.forEach((marker, index) => {
+                addLogEntry('info', `标记点 ${index + 1}: ${marker.getTitle()} at ${marker.getPosition()}`);
+            });
+        }
+        
+        function showMapInfo() {
+            if (!window.MapManager?.map) {
+                addLogEntry('warn', '地图实例不存在');
+                return;
+            }
+            
+            const map = window.MapManager.map;
+            addLogEntry('info', `地图中心点: ${map.getCenter()}`);
+            addLogEntry('info', `地图缩放级别: ${map.getZoom()}`);
+            addLogEntry('info', `地图边界: ${map.getBounds()}`);
+        }
+        
+        // 初始化
+        async function init() {
+            try {
+                updateStatus('初始化MockData...', 'loading');
+                window.MockData.init();
+                
+                updateStatus('初始化地图管理器...', 'loading');
+                await window.MapManager.init();
+                
+                updateStatus('地图初始化成功！', 'success');
+                
+                // 定时更新统计信息
+                setInterval(updateStats, 1000);
+                
+            } catch (error) {
+                updateStatus(`初始化失败: ${error.message}`, 'error');
+                console.error('初始化失败:', error);
+            }
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // 添加初始日志
+        addLogEntry('info', '地图调试工具已启动');
+    </script>
+</body>
+</html>

@@ -47,15 +47,31 @@ class MapManager {
             // 添加地图加载完成监听
             this.map.on('complete', () => {
                 console.log('地图加载完成');
-                // 添加控件
-                this.map.addControl(new this.AMap.Scale());
-                this.map.addControl(new this.AMap.ToolBar());
+                try {
+                    // 添加控件
+                    this.map.addControl(new this.AMap.Scale());
+                    this.map.addControl(new this.AMap.ToolBar());
 
-                // 初始化标记点
-                this.initializeMarkers();
+                    // 初始化标记点
+                    this.initializeMarkers();
 
-                this.isInitialized = true;
-                console.log('地图初始化成功');
+                    this.isInitialized = true;
+                    console.log('地图初始化成功');
+                    
+                    // 显示成功通知
+                    if (window.CarbonBrainApp) {
+                        window.CarbonBrainApp.showNotification('地图模块', '地图加载成功', 'success');
+                    }
+                } catch (error) {
+                    console.error('地图初始化过程中出错:', error);
+                    this.showMapPlaceholder(`初始化失败: ${error.message}`);
+                }
+            });
+
+            // 添加地图错误监听
+            this.map.on('error', (error) => {
+                console.error('地图加载错误:', error);
+                this.showMapPlaceholder('地图加载失败');
             });
 
         } catch (error) {
@@ -144,76 +160,132 @@ class MapManager {
 
     // 初始化标记点
     initializeMarkers() {
-        if (!this.map || !window.MockData) return;
+        if (!this.map) {
+            console.warn('地图实例不存在，无法添加标记点');
+            return;
+        }
+        
+        if (!window.MockData) {
+            console.warn('MockData未加载，无法获取地理数据');
+            return;
+        }
 
-        const geoData = window.MockData.getGeoData();
+        try {
+            console.log('开始初始化地图标记点...');
+            const geoData = window.MockData.getGeoData();
+            console.log('获取地理数据:', geoData);
 
-        // 添加CO2捕集源标记
-        this.addSourceMarker(geoData.sourceLocation);
+            // 添加CO2捕集源标记
+            if (geoData.sourceLocation) {
+                console.log('添加CO2捕集源标记:', geoData.sourceLocation.name);
+                this.addSourceMarker(geoData.sourceLocation);
+            }
 
-        // 添加存储和运输点标记
-        geoData.storageLocations.forEach(location => {
-            this.addStorageMarker(location);
-        });
+            // 添加存储和运输点标记
+            if (geoData.storageLocations && geoData.storageLocations.length > 0) {
+                console.log(`添加${geoData.storageLocations.length}个存储/运输点标记`);
+                geoData.storageLocations.forEach((location, index) => {
+                    console.log(`添加标记 ${index + 1}:`, location.name, location.type);
+                    this.addStorageMarker(location);
+                });
+            }
+            
+            console.log(`地图标记点初始化完成，共添加${this.markers.length}个标记`);
+            
+        } catch (error) {
+            console.error('标记点初始化失败:', error);
+        }
     }
 
     // 添加CO2源点标记
     addSourceMarker(location) {
-        if (!this.map || !this.AMap) return;
+        if (!this.map || !this.AMap) {
+            console.warn('地图或AMap实例不存在，无法添加源点标记');
+            return;
+        }
 
-        const marker = new this.AMap.Marker({
-            position: [location.lng, location.lat],
-            title: location.name,
-            icon: new this.AMap.Icon({
-                image: 'data:image/svg+xml;base64,' + btoa(`
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-                        <circle cx="16" cy="16" r="12" fill="#00d4aa" stroke="#ffffff" stroke-width="2"/>
-                        <text x="16" y="20" text-anchor="middle" fill="white" font-size="12" font-family="Arial">🏭</text>
-                    </svg>
-                `),
-                size: new this.AMap.Size(32, 32),
-                imageOffset: new this.AMap.Pixel(-16, -16)
-            })
-        });
+        try {
+            // 使用简单的SVG图标，避免emoji编码问题
+            const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="12" fill="#00d4aa" stroke="#ffffff" stroke-width="2"/>
+                <circle cx="16" cy="16" r="6" fill="#ffffff"/>
+                <circle cx="16" cy="16" r="3" fill="#00d4aa"/>
+            </svg>`;
 
-        marker.setMap(this.map);
-        this.markers.push(marker);
+            const marker = new this.AMap.Marker({
+                position: [location.lng, location.lat],
+                title: location.name,
+                icon: new this.AMap.Icon({
+                    image: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgIcon),
+                    size: new this.AMap.Size(32, 32),
+                    imageOffset: new this.AMap.Pixel(-16, -16)
+                })
+            });
 
-        // 添加点击事件
-        marker.on('click', () => {
-            this.showLocationInfo(location);
-        });
+            marker.setMap(this.map);
+            this.markers.push(marker);
+
+            // 添加点击事件
+            marker.on('click', () => {
+                this.showLocationInfo(location);
+            });
+            
+            console.log(`源点标记添加成功: ${location.name}`);
+            
+        } catch (error) {
+            console.error('添加源点标记失败:', error);
+        }
     }
 
     // 添加存储点标记
     addStorageMarker(location) {
-        if (!this.map || !this.AMap) return;
+        if (!this.map || !this.AMap) {
+            console.warn('地图或AMap实例不存在，无法添加存储点标记');
+            return;
+        }
 
-        const colors = {
+        try {
+            const colors = {
             storage: '#ff6b6b',
             transport: '#ffc107',
             partner: '#2196f3'
         };
 
-        const icons = {
-            storage: '🏭',
-            transport: '🚛',
-            partner: '🏢'
-        };
-
         const color = colors[location.type] || '#00d4aa';
-        const icon = icons[location.type] || '📍';
+
+        // 根据类型创建不同的SVG图标
+        let svgIcon;
+        if (location.type === 'storage') {
+            svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+                <circle cx="14" cy="14" r="10" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+                <rect x="8" y="8" width="12" height="8" fill="white" stroke="none"/>
+                <rect x="10" y="10" width="8" height="4" fill="${color}"/>
+            </svg>`;
+        } else if (location.type === 'transport') {
+            svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+                <circle cx="14" cy="14" r="10" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+                <rect x="6" y="10" width="16" height="6" fill="white" rx="1"/>
+                <circle cx="9" cy="18" r="2" fill="white"/>
+                <circle cx="19" cy="18" r="2" fill="white"/>
+            </svg>`;
+        } else if (location.type === 'partner') {
+            svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+                <circle cx="14" cy="14" r="10" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+                <rect x="8" y="12" width="12" height="8" fill="white"/>
+                <rect x="10" y="8" width="8" height="4" fill="white"/>
+            </svg>`;
+        } else {
+            svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+                <circle cx="14" cy="14" r="10" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+                <circle cx="14" cy="14" r="4" fill="white"/>
+            </svg>`;
+        }
 
         const marker = new this.AMap.Marker({
             position: [location.lng, location.lat],
             title: location.name,
             icon: new this.AMap.Icon({
-                image: 'data:image/svg+xml;base64,' + btoa(`
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
-                        <circle cx="14" cy="14" r="10" fill="${color}" stroke="#ffffff" stroke-width="2"/>
-                        <text x="14" y="18" text-anchor="middle" fill="white" font-size="10" font-family="Arial">${icon}</text>
-                    </svg>
-                `),
+                image: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgIcon),
                 size: new this.AMap.Size(28, 28),
                 imageOffset: new this.AMap.Pixel(-14, -14)
             })
@@ -226,6 +298,12 @@ class MapManager {
         marker.on('click', () => {
             this.showLocationInfo(location);
         });
+        
+        console.log(`存储点标记添加成功: ${location.name} (${location.type})`);
+        
+        } catch (error) {
+            console.error('添加存储点标记失败:', error);
+        }
     }
 
     // 显示位置信息
