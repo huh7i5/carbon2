@@ -176,7 +176,7 @@ class LLMManager {
             const { chart, data } = chartData;
             
             // 调用后端LLM API
-            const response = await fetch('/api/llm/chat', {
+            const response = await fetch('http://localhost:3000/api/llm/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

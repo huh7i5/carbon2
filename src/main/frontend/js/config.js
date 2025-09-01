@@ -163,7 +163,7 @@ const CONFIG = {
     // LLM配置
     LLM: {
         ENABLED: true,
-        MODEL: 'mock',              // 'openai', 'zhipu', 'mock'
+        MODEL: 'zhipu',             // 'openai', 'zhipu', 'mock'
         API_KEY: '',                // API密钥
         MAX_TOKENS: 500,            // 最大回复token数
         TEMPERATURE: 0.7,           // 回复温度
