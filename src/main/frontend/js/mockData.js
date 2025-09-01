@@ -146,8 +146,10 @@ class MockDataGenerator {
                 lng: 121.783333,
                 lat: 30.866667,
                 name: '上海化学工业区CO2捕集源',
+                type: 'source',
                 captureRate: 89.5,
-                dailyCapture: 3620
+                dailyCapture: 3620,
+                description: '基于化学吸收法的乙烯裂解装置CO2捕集系统，采用MEA溶剂技术'
             },
             
             // 存储和合作伙伴位置
@@ -156,22 +158,26 @@ class MockDataGenerator {
                     lng: 121.9,
                     lat: 30.75,
                     name: '东海CO2封存点A',
+                    type: 'storage',
                     capacity: 100000,
-                    currentStorage: 45600
+                    currentStorage: 45600,
+                    description: 'CO2地质封存设施，采用深层盐水层封存技术'
                 },
                 {
                     lng: 121.45,
                     lat: 31.15,
                     name: '产品运输中心',
                     type: 'transport',
-                    dailyThroughput: 580
+                    dailyThroughput: 580,
+                    description: '甲醇产品物流配送中心，负责产品外运'
                 },
                 {
                     lng: 121.65,
                     lat: 30.95,
                     name: '合作化工厂B',
                     type: 'partner',
-                    monthlyDemand: 15600
+                    monthlyDemand: 15600,
+                    description: 'CO2利用合作企业，进行化工产品生产'
                 }
             ],
             

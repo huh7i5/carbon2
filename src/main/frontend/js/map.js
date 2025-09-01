@@ -15,19 +15,23 @@ class MapManager {
             return;
         }
 
+        // 显示加载状态
+        this.showLoadingStatus();
+
         // 检查AMapLoader是否可用
         if (typeof AMapLoader === 'undefined') {
             console.warn('AMapLoader未加载，显示占位符');
-            this.showMapPlaceholder();
+            this.showMapPlaceholder('AMapLoader未加载');
             return;
         }
 
         try {
             // 使用AMapLoader加载高德地图API
+            console.log('正在加载高德地图API...');
             this.AMap = await AMapLoader.load({
                 key: window.CONFIG?.AMAP?.KEY || "ec8bd2f50328bddc6a67a4e881f4adfb",
                 version: "2.0",
-                plugins: ['AMap.Scale', 'AMap.ToolBar'] // 需要使用的插件列表
+                plugins: ['AMap.Scale', 'AMap.ToolBar', 'AMap.Polyline', 'AMap.InfoWindow'] // 需要使用的插件列表
             });
 
             // 初始化地图实例
@@ -35,27 +39,67 @@ class MapManager {
                 center: window.CONFIG?.AMAP?.CENTER || [121.783333, 30.866667],
                 zoom: window.CONFIG?.AMAP?.ZOOM || 12,
                 mapStyle: 'amap://styles/darkblue', // 深色主题
-                viewMode: '2D'
+                viewMode: '2D',
+                features: ['bg', 'road', 'building'], // 显示背景、道路、建筑
+                expandZoomRange: true
             });
 
-            // 添加控件
-            this.map.addControl(new this.AMap.Scale());
-            this.map.addControl(new this.AMap.ToolBar());
+            // 添加地图加载完成监听
+            this.map.on('complete', () => {
+                console.log('地图加载完成');
+                // 添加控件
+                this.map.addControl(new this.AMap.Scale());
+                this.map.addControl(new this.AMap.ToolBar());
 
-            // 初始化标记点
-            this.initializeMarkers();
+                // 初始化标记点
+                this.initializeMarkers();
 
-            this.isInitialized = true;
-            console.log('地图初始化成功');
+                this.isInitialized = true;
+                console.log('地图初始化成功');
+            });
 
         } catch (error) {
             console.error('地图初始化失败:', error);
-            this.showMapPlaceholder();
+            this.showMapPlaceholder(`地图加载失败: ${error.message}`);
+        }
+    }
+
+    // 显示加载状态
+    showLoadingStatus() {
+        const mapContainer = document.getElementById('mapContainer');
+        if (mapContainer) {
+            mapContainer.innerHTML = `
+                <div style="
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-direction: column;
+                    color: #a0a0a0;
+                    font-size: 16px;
+                    background: rgba(0, 0, 0, 0.3);
+                    border-radius: 8px;
+                ">
+                    <div class="loading-spinner" style="
+                        width: 40px;
+                        height: 40px;
+                        border: 4px solid #333;
+                        border-top: 4px solid #00d4aa;
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                        margin-bottom: 15px;
+                    "></div>
+                    <div style="margin-bottom: 5px;">正在加载高德地图...</div>
+                    <div style="font-size: 12px; color: #666;">
+                        请稍候，地图模块正在初始化
+                    </div>
+                </div>
+            `;
         }
     }
 
     // 显示地图占位符
-    showMapPlaceholder() {
+    showMapPlaceholder(errorMessage = '地图加载失败') {
         const mapContainer = document.getElementById('mapContainer');
         if (mapContainer) {
             mapContainer.innerHTML = `
@@ -72,15 +116,27 @@ class MapManager {
                 ">
                     <i class="fas fa-map" style="font-size: 48px; margin-bottom: 15px; color: #00d4aa;"></i>
                     <div style="margin-bottom: 5px;">上海化工园区地理空间分析</div>
-                    <div style="font-size: 12px; color: #666;">
-                        地图模块 - 需要配置高德地图API Key
+                    <div style="font-size: 12px; color: #ff6b6b; margin-bottom: 10px;">
+                        ${errorMessage}
                     </div>
                     <div style="margin-top: 15px; padding: 10px 15px; background: rgba(0, 212, 170, 0.1); border-radius: 4px; font-size: 11px;">
-                        <div>🗺️ CO2捕集源: 上海化学工业区</div>
-                        <div>📍 封存点: 东海CO2封存点A</div>
-                        <div>🚛 运输中心: 产品运输中心</div>
-                        <div>🏭 合作企业: 合作化工厂B</div>
+                        <div>🗺️ CO2捕集源: 上海化学工业区 (121.783°E, 30.867°N)</div>
+                        <div>📍 封存点: 东海CO2封存点A (121.9°E, 30.75°N)</div>
+                        <div>🚛 运输中心: 产品运输中心 (121.45°E, 31.15°N)</div>
+                        <div>🏭 合作企业: 合作化工厂B (121.65°E, 30.95°N)</div>
                     </div>
+                    <button style="
+                        margin-top: 15px;
+                        padding: 8px 16px;
+                        background: #00d4aa;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 12px;
+                    " onclick="window.MapManager.init()">
+                        重新加载地图
+                    </button>
                 </div>
             `;
         }

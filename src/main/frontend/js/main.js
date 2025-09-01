@@ -24,7 +24,7 @@ class CarbonBrainApp {
             await this.initializeCharts();
             
             // 初始化地图
-            this.initializeMap();
+            await this.initializeMap();
             
             // 初始化事件监听
             this.setupEventListeners();
@@ -106,19 +106,22 @@ class CarbonBrainApp {
     }
 
     // 初始化地图
-    initializeMap() {
-        // 检查高德地图API是否加载
-        if (typeof AMap === 'undefined') {
-            console.warn('高德地图API未加载，将显示占位符');
-            this.showMapPlaceholder();
-            return;
-        }
-        
-        // 初始化地图实例
-        if (window.MapManager) {
-            window.MapManager.init();
-        } else {
-            console.warn('地图管理器未加载');
+    async initializeMap() {
+        try {
+            console.log('初始化地图模块...');
+            
+            // 检查地图管理器是否加载
+            if (!window.MapManager) {
+                console.warn('地图管理器未加载，将显示占位符');
+                this.showMapPlaceholder();
+                return;
+            }
+            
+            // 初始化地图实例
+            await window.MapManager.init();
+            
+        } catch (error) {
+            console.error('地图初始化失败:', error);
             this.showMapPlaceholder();
         }
     }
@@ -408,18 +411,30 @@ class CarbonBrainApp {
 
     // 地图功能
     showSources() {
-        console.log('显示CO2源点');
-        this.showNotification('地图操作', 'CO2源点已高亮显示', 'info');
+        if (window.MapManager && window.MapManager.isInitialized) {
+            window.MapManager.showSources();
+            this.showNotification('地图操作', 'CO2源点已高亮显示', 'info');
+        } else {
+            this.showNotification('地图错误', '地图未正确初始化', 'error');
+        }
     }
 
     showRoutes() {
-        console.log('显示运输路线');
-        this.showNotification('地图操作', '运输路线已显示', 'info');
+        if (window.MapManager && window.MapManager.isInitialized) {
+            window.MapManager.showRoutes();
+            this.showNotification('地图操作', '运输路线已显示', 'info');
+        } else {
+            this.showNotification('地图错误', '地图未正确初始化', 'error');
+        }
     }
 
     showStorage() {
-        console.log('显示封存点');
-        this.showNotification('地图操作', '封存点位置已标记', 'info');
+        if (window.MapManager && window.MapManager.isInitialized) {
+            window.MapManager.showStorage();
+            this.showNotification('地图操作', '封存点位置已标记', 'info');
+        } else {
+            this.showNotification('地图错误', '地图未正确初始化', 'error');
+        }
     }
 
     // 处理窗口大小改变
