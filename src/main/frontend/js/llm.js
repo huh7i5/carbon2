@@ -175,6 +175,8 @@ class LLMManager {
         try {
             const { chart, data } = chartData;
             
+            console.log('🤖 正在调用智谱AI API...', userMessage);
+            
             // 调用后端LLM API
             const response = await fetch('http://localhost:3000/api/llm/chat', {
                 method: 'POST',
@@ -195,13 +197,15 @@ class LLMManager {
             const result = await response.json();
             
             if (result.success) {
+                console.log('✅ 智谱AI回复成功:', result.data.response?.substring(0, 50) + '...');
                 return result.data.response || result.data.text || '收到您的问题，正在分析...';
             } else {
                 throw new Error(result.error?.message || '后端API返回错误');
             }
             
         } catch (error) {
-            console.error('LLM API调用失败:', error);
+            console.error('🔴 LLM API调用失败:', error);
+            console.log('🔄 降级到本地模拟回复');
             
             // 降级到本地模拟回复
             return this.generateFallbackResponse(userMessage, chartData);
