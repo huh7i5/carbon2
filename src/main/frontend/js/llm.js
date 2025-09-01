@@ -172,9 +172,44 @@ class LLMManager {
 
     // 生成AI回复
     async generateResponse(userMessage, chartData) {
-        // 模拟API调用延迟
-        await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
-
+        try {
+            const { chart, data } = chartData;
+            
+            // 调用后端LLM API
+            const response = await fetch('/api/llm/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: userMessage,
+                    context: chart,
+                    data: data
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API请求失败: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                return result.data.response || result.data.text || '收到您的问题，正在分析...';
+            } else {
+                throw new Error(result.error?.message || '后端API返回错误');
+            }
+            
+        } catch (error) {
+            console.error('LLM API调用失败:', error);
+            
+            // 降级到本地模拟回复
+            return this.generateFallbackResponse(userMessage, chartData);
+        }
+    }
+    
+    // 降级回复方法
+    generateFallbackResponse(userMessage, chartData) {
         const { chart, data } = chartData;
         const lowerMessage = userMessage.toLowerCase();
 

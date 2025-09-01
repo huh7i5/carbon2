@@ -1,4 +1,6 @@
 // 沪碳智脑后端服务器主入口
+require('dotenv').config(); // 加载环境变量
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');

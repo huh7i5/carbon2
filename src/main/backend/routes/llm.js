@@ -1,6 +1,10 @@
 // LLM智能分析路由
 const express = require('express');
 const router = express.Router();
+const ZhipuAIService = require('../services/ZhipuAIService');
+
+// 初始化智谱AI服务
+const zhipuAI = new ZhipuAIService();
 
 /**
  * @route POST /api/llm/analyze
@@ -11,12 +15,20 @@ router.post('/analyze', async (req, res) => {
     try {
         const { query, context = 'general', data = {} } = req.body;
         
-        console.log(`LLM分析请求: 查询="${query}", 上下文=${context}`);
+        if (!query) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_QUERY',
+                    message: '查询内容不能为空'
+                }
+            });
+        }
         
-        // 模拟LLM处理时间
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        console.log(`智谱AI分析请求: 查询="${query}", 上下文=${context}`);
         
-        const analysis = generateLLMResponse(query, context, data);
+        // 使用智谱AI进行分析
+        const analysis = await zhipuAI.analyzeData(query, context, data);
         
         res.json({
             success: true,
@@ -25,12 +37,13 @@ router.post('/analyze', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('LLM分析失败:', error);
+        console.error('智谱AI分析失败:', error);
         res.status(500).json({
             success: false,
             error: {
                 code: 'LLM_ANALYSIS_ERROR',
-                message: 'LLM分析失败'
+                message: '智谱AI分析失败',
+                details: error.message
             }
         });
     }
@@ -43,31 +56,94 @@ router.post('/analyze', async (req, res) => {
  */
 router.post('/chat', async (req, res) => {
     try {
-        const { message, sessionId, context } = req.body;
+        const { message, sessionId, context = 'general' } = req.body;
         
-        // 模拟对话处理
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!message) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_MESSAGE',
+                    message: '消息内容不能为空'
+                }
+            });
+        }
         
-        const response = generateChatResponse(message, context);
+        console.log(`智谱AI对话请求: 消息="${message}", 会话=${sessionId}`);
+        
+        // 使用智谱AI进行对话
+        const chatResponse = await zhipuAI.chat(message, sessionId, context);
         
         res.json({
             success: true,
-            data: {
-                response: response.text,
-                confidence: response.confidence,
-                suggestions: response.suggestions,
-                sessionId: sessionId || generateSessionId()
-            },
+            data: chatResponse,
             timestamp: new Date().toISOString()
         });
         
     } catch (error) {
-        console.error('LLM对话失败:', error);
+        console.error('智谱AI对话失败:', error);
         res.status(500).json({
             success: false,
             error: {
                 code: 'LLM_CHAT_ERROR',
-                message: 'LLM对话失败'
+                message: '智谱AI对话失败',
+                details: error.message
+            }
+        });
+    }
+});
+
+/**
+ * @route GET /api/llm/status
+ * @desc 获取智谱AI服务状态
+ * @access Public
+ */
+router.get('/status', async (req, res) => {
+    try {
+        const status = zhipuAI.getStatus();
+        
+        res.json({
+            success: true,
+            data: status,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('获取LLM状态失败:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'STATUS_ERROR',
+                message: '获取服务状态失败'
+            }
+        });
+    }
+});
+
+/**
+ * @route POST /api/llm/test
+ * @desc 测试智谱AI连接
+ * @access Public
+ */
+router.post('/test', async (req, res) => {
+    try {
+        console.log('智谱AI连接测试请求');
+        
+        const testResult = await zhipuAI.testConnection();
+        
+        res.json({
+            success: testResult.success,
+            data: testResult,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('智谱AI连接测试失败:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'TEST_ERROR',
+                message: '连接测试失败',
+                details: error.message
             }
         });
     }

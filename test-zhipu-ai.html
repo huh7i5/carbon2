@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智谱AI集成测试 - 沪碳智脑</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #1a252f;
+            color: white;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #00d4aa;
+        }
+        
+        .test-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h3 {
+            color: #00d4aa;
+            margin-top: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #a0a0a0;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #2a3441;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: #00d4aa;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .result.loading {
+            color: #ffc107;
+        }
+        
+        .result.success {
+            border-color: #00d4aa;
+        }
+        
+        .result.error {
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status.online {
+            background: rgba(0, 212, 170, 0.2);
+            color: #00d4aa;
+        }
+        
+        .status.offline {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 智谱AI集成测试</h1>
+            <p>沪碳智脑平台 - 智谱AI GLM-4.5 模型测试界面</p>
+            <div>
+                后端状态: <span id="backendStatus" class="status offline">未连接</span>
+                智谱AI状态: <span id="zhipuStatus" class="status offline">未知</span>
+            </div>
+        </div>
+
+        <!-- 连接测试 -->
+        <div class="test-section">
+            <h3>🔌 连接测试</h3>
+            <p>测试后端服务和智谱AI服务的连接状态</p>
+            <button class="btn btn-primary" onclick="testConnection()">测试连接</button>
+            <button class="btn btn-secondary" onclick="getStatus()">获取状态</button>
+            <div id="connectionResult" class="result"></div>
+        </div>
+
+        <!-- 智能分析测试 -->
+        <div class="test-section">
+            <h3>📊 智能数据分析测试</h3>
+            <div class="form-group">
+                <label>分析上下文:</label>
+                <select id="analysisContext">
+                    <option value="general">通用分析</option>
+                    <option value="kpi">KPI分析</option>
+                    <option value="performance">性能分析</option>
+                    <option value="economic">经济分析</option>
+                    <option value="prediction">预测分析</option>
+                    <option value="geo">地理分析</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>分析问题:</label>
+                <textarea id="analysisQuery" placeholder="请输入您的分析问题，例如：分析当前系统运行状况并给出优化建议">分析当前CCU系统的运行状况，重点关注CO2捕集率和能耗指标，给出优化建议。</textarea>
+            </div>
+            <button class="btn btn-primary" onclick="testAnalysis()">开始分析</button>
+            <div id="analysisResult" class="result"></div>
+        </div>
+
+        <!-- 智能对话测试 -->
+        <div class="test-section">
+            <h3>💬 智能对话测试</h3>
+            <div class="form-group">
+                <label>会话ID (可选):</label>
+                <input type="text" id="sessionId" placeholder="留空自动生成新会话">
+            </div>
+            <div class="form-group">
+                <label>对话上下文:</label>
+                <select id="chatContext">
+                    <option value="general">通用对话</option>
+                    <option value="kpi">KPI专家</option>
+                    <option value="performance">技术专家</option>
+                    <option value="economic">经济专家</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>消息内容:</label>
+                <textarea id="chatMessage" placeholder="请输入您的问题或消息">你好，我是沪碳智脑平台的操作员，请介绍一下CCU技术的核心指标。</textarea>
+            </div>
+            <button class="btn btn-primary" onclick="testChat()">发送消息</button>
+            <button class="btn btn-secondary" onclick="clearSession()">清除会话</button>
+            <div id="chatResult" class="result"></div>
+        </div>
+
+        <!-- 预设问题测试 -->
+        <div class="test-section">
+            <h3>⚡ 快速测试</h3>
+            <p>点击下面的按钮快速测试不同场景的智谱AI回复</p>
+            <button class="btn btn-secondary" onclick="quickTest('kpi')">KPI分析</button>
+            <button class="btn btn-secondary" onclick="quickTest('performance')">性能分析</button>
+            <button class="btn btn-secondary" onclick="quickTest('economic')">经济分析</button>
+            <button class="btn btn-secondary" onclick="quickTest('prediction')">预测分析</button>
+            <div id="quickTestResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentSessionId = null;
+        
+        // 检查后端连接状态
+        async function checkBackendStatus() {
+            try {
+                const response = await fetch('/health');
+                if (response.ok) {
+                    document.getElementById('backendStatus').textContent = '已连接';
+                    document.getElementById('backendStatus').className = 'status online';
+                    return true;
+                }
+            } catch (error) {
+                console.error('后端连接检查失败:', error);
+            }
+            
+            document.getElementById('backendStatus').textContent = '未连接';
+            document.getElementById('backendStatus').className = 'status offline';
+            return false;
+        }
+        
+        // 测试连接
+        async function testConnection() {
+            const resultEl = document.getElementById('connectionResult');
+            resultEl.textContent = '正在测试连接...';
+            resultEl.className = 'result loading';
+            
+            try {
+                const response = await fetch('/api/llm/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                resultEl.className = data.success ? 'result success' : 'result error';
+                
+                if (data.success) {
+                    document.getElementById('zhipuStatus').textContent = '已连接';
+                    document.getElementById('zhipuStatus').className = 'status online';
+                }
+                
+            } catch (error) {
+                resultEl.textContent = `连接测试失败: ${error.message}`;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        // 获取状态
+        async function getStatus() {
+            const resultEl = document.getElementById('connectionResult');
+            resultEl.textContent = '正在获取状态...';
+            resultEl.className = 'result loading';
+            
+            try {
+                const response = await fetch('/api/llm/status');
+                const data = await response.json();
+                
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                resultEl.className = 'result success';
+                
+                if (data.data && data.data.isAvailable) {
+                    document.getElementById('zhipuStatus').textContent = '可用';
+                    document.getElementById('zhipuStatus').className = 'status online';
+                }
+                
+            } catch (error) {
+                resultEl.textContent = `状态获取失败: ${error.message}`;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        // 测试智能分析
+        async function testAnalysis() {
+            const context = document.getElementById('analysisContext').value;
+            const query = document.getElementById('analysisQuery').value;
+            const resultEl = document.getElementById('analysisResult');
+            
+            if (!query.trim()) {
+                alert('请输入分析问题');
+                return;
+            }
+            
+            resultEl.textContent = '智谱AI正在分析中...';
+            resultEl.className = 'result loading';
+            
+            try {
+                const response = await fetch('/api/llm/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        context: context,
+                        data: getSampleData(context)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const result = data.data;
+                    let displayText = `分析结果:\n${result.response}\n\n`;
+                    
+                    if (result.suggestions && result.suggestions.length > 0) {
+                        displayText += `建议:\n${result.suggestions.map(s => `• ${s}`).join('\n')}\n\n`;
+                    }
+                    
+                    displayText += `置信度: ${(result.confidence * 100).toFixed(1)}%\n`;
+                    displayText += `上下文: ${result.context}\n`;
+                    
+                    if (result.usage) {
+                        displayText += `Token使用: ${JSON.stringify(result.usage)}`;
+                    }
+                    
+                    resultEl.textContent = displayText;
+                    resultEl.className = 'result success';
+                } else {
+                    resultEl.textContent = `分析失败: ${data.error?.message || '未知错误'}`;
+                    resultEl.className = 'result error';
+                }
+                
+            } catch (error) {
+                resultEl.textContent = `请求失败: ${error.message}`;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        // 测试智能对话
+        async function testChat() {
+            const sessionId = document.getElementById('sessionId').value || currentSessionId;
+            const context = document.getElementById('chatContext').value;
+            const message = document.getElementById('chatMessage').value;
+            const resultEl = document.getElementById('chatResult');
+            
+            if (!message.trim()) {
+                alert('请输入消息内容');
+                return;
+            }
+            
+            resultEl.textContent = '智谱AI正在回复中...';
+            resultEl.className = 'result loading';
+            
+            try {
+                const response = await fetch('/api/llm/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        sessionId: sessionId,
+                        context: context
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const result = data.data;
+                    currentSessionId = result.sessionId;
+                    document.getElementById('sessionId').value = currentSessionId;
+                    
+                    let displayText = `AI回复:\n${result.response}\n\n`;
+                    displayText += `会话ID: ${result.sessionId}\n`;
+                    displayText += `置信度: ${(result.confidence * 100).toFixed(1)}%\n`;
+                    
+                    if (result.suggestions && result.suggestions.length > 0) {
+                        displayText += `\n相关建议:\n${result.suggestions.map(s => `• ${s}`).join('\n')}`;
+                    }
+                    
+                    resultEl.textContent = displayText;
+                    resultEl.className = 'result success';
+                } else {
+                    resultEl.textContent = `对话失败: ${data.error?.message || '未知错误'}`;
+                    resultEl.className = 'result error';
+                }
+                
+            } catch (error) {
+                resultEl.textContent = `请求失败: ${error.message}`;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        // 清除会话
+        function clearSession() {
+            currentSessionId = null;
+            document.getElementById('sessionId').value = '';
+            document.getElementById('chatResult').textContent = '会话已清除';
+            document.getElementById('chatResult').className = 'result';
+        }
+        
+        // 快速测试
+        async function quickTest(type) {
+            const queries = {
+                kpi: '分析当前KPI指标表现，识别需要关注的问题',
+                performance: '评估系统技术性能，提出优化建议',
+                economic: '分析成本效益，建议降本增效策略',
+                prediction: '基于预测数据，给出运行调整建议'
+            };
+            
+            const resultEl = document.getElementById('quickTestResult');
+            resultEl.textContent = '智谱AI正在分析中...';
+            resultEl.className = 'result loading';
+            
+            try {
+                const response = await fetch('/api/llm/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: queries[type],
+                        context: type,
+                        data: getSampleData(type)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultEl.textContent = `【${type.toUpperCase()}快速测试】\n\n${data.data.response}`;
+                    resultEl.className = 'result success';
+                } else {
+                    resultEl.textContent = `快速测试失败: ${data.error?.message || '未知错误'}`;
+                    resultEl.className = 'result error';
+                }
+                
+            } catch (error) {
+                resultEl.textContent = `请求失败: ${error.message}`;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        // 获取示例数据
+        function getSampleData(context) {
+            const sampleData = {
+                kpi: {
+                    totalInvestment: { value: 2.8, unit: '亿元', change: '+2.5%' },
+                    co2Capture: { value: 156.8, unit: '吨/小时', change: '+12.3%' },
+                    methanolProduction: { value: 24.6, unit: '吨/小时', change: '+8.7%' },
+                    realTimeProfit: { value: 18.9, unit: '万元/小时', change: '+15.2%' }
+                },
+                performance: {
+                    timestamps: Array.from({length: 24}, (_, i) => new Date(Date.now() - (23-i) * 3600000).toISOString()),
+                    captureRate: Array.from({length: 24}, () => 85 + Math.random() * 10),
+                    energyConsumption: Array.from({length: 24}, () => 3.2 + Math.random() * 0.8)
+                },
+                economic: {
+                    costBreakdown: {
+                        electricity: 45000,
+                        solvent: 28000,
+                        labor: 15000,
+                        maintenance: 12000,
+                        other: 8000
+                    }
+                }
+            };
+            
+            return sampleData[context] || {};
+        }
+        
+        // 页面加载时检查状态
+        document.addEventListener('DOMContentLoaded', () => {
+            checkBackendStatus();
+            setTimeout(() => {
+                getStatus();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
