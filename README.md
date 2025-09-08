@@ -200,7 +200,8 @@ python --version  # 或 python3 --version
 bash start-frontend.sh
 
 # 访问地址:
-# http://localhost:8081/src/main/frontend/html/index.html
+# 主控制台: http://localhost:8081/src/main/frontend/html/index.html
+# 项目导航: http://localhost:8081/index.html
 ```
 
 **启动后端服务**
@@ -220,7 +221,7 @@ bash start-backend.sh
 ```bash
 # 启动前端开发服务器
 npm run serve
-# 访问: http://localhost:8080/html/index.html
+# 主控制台: http://localhost:8080/html/index.html
 
 # 启动后端服务 (另一个终端)
 npm run dev
@@ -247,9 +248,10 @@ node server.js
 ### 🎯 访问地址
 
 #### 前端界面
-- **主控制台**: http://localhost:8081/src/main/frontend/html/index.html
-- **项目导航**: http://localhost:8081/index.html
-- **地图测试**: http://localhost:8081/test-map.html
+- **项目导航页**: http://localhost:8081/index.html
+- **主控制台(核心应用)**: http://localhost:8081/src/main/frontend/html/index.html  
+- **地图功能测试**: http://localhost:8081/test-map.html
+- **智谱AI测试**: http://localhost:8081/test-zhipu-ai.html
 
 #### 后端API
 - **API根地址**: http://localhost:3000
@@ -265,7 +267,9 @@ node server.js
 # 终端2: 
 ./start-frontend.sh
 
-# 然后访问: http://localhost:8081/src/main/frontend/html/index.html
+# 然后访问: 
+# 项目导航: http://localhost:8081/index.html
+# 主控制台: http://localhost:8081/src/main/frontend/html/index.html
 ```
 
 ## 💡 故障排除
