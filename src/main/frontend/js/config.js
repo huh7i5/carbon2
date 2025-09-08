@@ -164,7 +164,7 @@ const CONFIG = {
     LLM: {
         ENABLED: true,
         MODEL: 'zhipu',             // 'openai', 'zhipu', 'mock'
-        API_KEY: '',                // API密钥
+        API_KEY: '81dafd92fdef48d8af38647d9531f075.jy9Rln9sDeXhldg4',  // 智谱AI API密钥
         MAX_TOKENS: 500,            // 最大回复token数
         TEMPERATURE: 0.7,           // 回复温度
         CONTEXT_LENGTH: 2000        // 上下文长度
@@ -201,6 +201,13 @@ window.validateConfig = function() {
     }
     
     // 检查LLM配置
+    console.log('🔍 LLM配置检查:', {
+        ENABLED: CONFIG.LLM.ENABLED,
+        MODEL: CONFIG.LLM.MODEL, 
+        API_KEY_LENGTH: CONFIG.LLM.API_KEY ? CONFIG.LLM.API_KEY.length : 0,
+        API_KEY_PREFIX: CONFIG.LLM.API_KEY ? CONFIG.LLM.API_KEY.substring(0, 10) + '...' : 'empty'
+    });
+    
     if (CONFIG.LLM.ENABLED && CONFIG.LLM.MODEL !== 'mock' && !CONFIG.LLM.API_KEY) {
         warnings.push('LLM API Key未配置，将使用模拟回复');
     }

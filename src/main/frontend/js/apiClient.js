@@ -1,6 +1,6 @@
 // API客户端 - 处理与后端服务器的通信
 class APIClient {
-    constructor(baseURL = '') {
+    constructor(baseURL = 'http://localhost:3000') {
         this.baseURL = baseURL;
         this.isBackendAvailable = false;
         this.wsConnection = null;
@@ -206,8 +206,8 @@ class APIClient {
         if (!this.isBackendAvailable) return;
 
         try {
-            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsURL = `${wsProtocol}//${window.location.host}/ws`;
+            const wsProtocol = 'ws:';
+            const wsURL = `${wsProtocol}//localhost:3000/ws`;
             
             this.wsConnection = new WebSocket(wsURL);
             
