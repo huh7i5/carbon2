@@ -152,68 +152,52 @@ carbon2/
 
 ---
 
-### 📦 安装步骤
+### 📦 快速安装
 
-#### 1. 克隆项目
 ```bash
-# 克隆代码库
+# 1. 克隆项目
 git clone https://github.com/huh7i5/carbon2.git
 cd carbon2
 
-# 或者下载ZIP并解压
-```
-
-#### 2. 安装Node.js依赖
-```bash
-# 项目根目录安装依赖
+# 2. 安装所有依赖
 npm install
+cd src/main/backend && npm install && cd ../../..
 
-# 后端服务依赖
-cd src/main/backend
-npm install
-cd ../../..
+# 3. 一键启动(前后端同时启动)
+npm run dev
 ```
 
-#### 3. 验证Python环境 (可选)
-```bash
-# 检查Python版本
-python --version  # 或 python3 --version
-
-# Python仅用于以下功能：
-# - 生成模拟数据
-# - 启动前端开发服务器
-# - 未来的数据分析模块
-```
+✨ **就这么简单！打开浏览器访问**: http://localhost:8080/src/main/frontend/html/index.html
 
 ---
 
-### 🎯 启动程序
+### 🚀 超简单启动
 
-#### 方法1: 使用启动脚本 (推荐)
-
-**启动前端演示**
+🎆 **推荐方式 - 一键启动**
 ```bash
-# Linux/macOS
-./start-frontend.sh
+# 在项目根目录执行
+npm run dev
+```
+✨ 这个命令会同时启动前端和后端服务，等待几秒后会显示访问地址。
 
-# Windows (在Git Bash中)
-bash start-frontend.sh
+---
 
-# 访问地址:
-# 主控制台: http://localhost:8081/src/main/frontend/html/index.html
-# 项目导航: http://localhost:8081/index.html
+#### 其他启动方式 (可选)
+
+**分别启动前后端**
+```bash
+# 仅启动后端
+npm run backend
+
+# 仅启动前端  
+npm run frontend
 ```
 
-**启动后端服务**
+**使用脚本启动**
 ```bash
-# Linux/macOS  
-./start-backend.sh
-
-# Windows (在Git Bash中)
-bash start-backend.sh
-
-# 后端API地址:
-# http://localhost:3000
+# Linux/macOS/Git Bash
+./start-frontend.sh  # 前端服务（端口 8081）
+./start-backend.sh   # 后端服务（端口 3000）
 ```
 
 #### 方法2: 使用npm脚本
@@ -245,32 +229,20 @@ node server.js
 
 ---
 
-### 🎯 访问地址
+### 🔗 访问地址
 
-#### 前端界面
-- **项目导航页**: http://localhost:8081/index.html
-- **主控制台(核心应用)**: http://localhost:8081/src/main/frontend/html/index.html  
-- **地图功能测试**: http://localhost:8081/test-map.html
-- **智谱AI测试**: http://localhost:8081/test-zhipu-ai.html
+**🎆 主要入口** (使用 `npm run dev` 启动后)
+- 📋 **主控制台**: http://localhost:8080/src/main/frontend/html/index.html
+- 🌐 **项目导航**: http://localhost:8080/index.html
 
-#### 后端API
-- **API根地址**: http://localhost:3000
-- **健康检查**: http://localhost:3000/health
-- **WebSocket**: ws://localhost:3000/ws
+**🔧 开发调试**
+- 📊 **后端API**: http://localhost:3000
+- ❤️ **健康检查**: http://localhost:3000/health
+- 🔌 **WebSocket**: ws://localhost:3000/ws
 
-#### 完整体验
-```bash
-# 同时启动前后端 (两个终端)
-# 终端1:
-./start-backend.sh
-
-# 终端2: 
-./start-frontend.sh
-
-# 然后访问: 
-# 项目导航: http://localhost:8081/index.html
-# 主控制台: http://localhost:8081/src/main/frontend/html/index.html
-```
+**🧪 测试页面**
+- 🗺️ **地图测试**: http://localhost:8080/test-map.html
+- 🤖 **AI测试**: http://localhost:8080/test-zhipu-ai.html
 
 ## 💡 故障排除
 
