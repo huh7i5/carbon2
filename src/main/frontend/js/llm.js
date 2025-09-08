@@ -8,9 +8,14 @@ class LLMManager {
 
     // 发送消息
     async sendMessage(message) {
-        if (this.isProcessing || !message.trim()) return;
+        console.log('📨 LLM sendMessage 被调用:', message);
+        if (this.isProcessing || !message.trim()) {
+            console.log('⚠️ 消息被阻止:', { isProcessing: this.isProcessing, isEmpty: !message.trim() });
+            return;
+        }
 
         this.isProcessing = true;
+        console.log('✅ 开始处理LLM消息:', message);
 
         try {
             // 添加用户消息到聊天界面
@@ -172,6 +177,9 @@ class LLMManager {
 
     // 生成AI回复
     async generateResponse(userMessage, chartData) {
+        console.log('🎯 LLM generateResponse 被调用', userMessage, chartData);
+        console.log('🔍 CONFIG.LLM:', window.CONFIG?.LLM);
+        
         try {
             const { chart, data } = chartData;
             
@@ -483,28 +491,66 @@ class LLMManager {
 
 // 全局实例
 window.LLMManager = new LLMManager();
+console.log('🎉 LLM模块已加载，全局函数:', typeof window.sendMessage);
 
 // 全局函数（供HTML调用）
 window.sendMessage = function() {
+    console.log('🌍 全局 sendMessage 被调用');
     const input = document.getElementById('chatInput');
-    if (!input) return;
+    if (!input) {
+        console.log('❌ 找不到 chatInput 元素');
+        return;
+    }
     
     const message = input.value.trim();
-    if (!message) return;
+    console.log('📝 输入的消息:', message);
+    if (!message) {
+        console.log('⚠️ 消息为空');
+        return;
+    }
     
     // 清空输入框
     input.value = '';
     
     // 发送消息
+    console.log('🚀 调用 LLMManager.sendMessage');
     window.LLMManager.sendMessage(message);
 };
 
-// 图表选择器变化事件
+// 图表选择器变化事件和键盘事件
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 DOM加载完成，初始化LLM事件');
+    
     const chartSelector = document.getElementById('chartSelector');
     if (chartSelector) {
         chartSelector.addEventListener('change', function(e) {
             window.LLMManager.changeChart(e.target.value);
         });
+        console.log('✅ 图表选择器事件已绑定');
+    } else {
+        console.log('❌ 找不到 chartSelector');
+    }
+    
+    // 添加回车发送支持
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                console.log('⌨️ 回车键被按下');
+                e.preventDefault();
+                window.sendMessage();
+            }
+        });
+        console.log('✅ 聊天输入框事件已绑定');
+    } else {
+        console.log('❌ 找不到 chatInput');
+    }
+    
+    // 测试按钮
+    const sendButton = document.getElementById('sendButton');
+    if (sendButton) {
+        console.log('✅ 发送按钮存在');
+    } else {
+        console.log('❌ 找不到 sendButton');
     }
 });
