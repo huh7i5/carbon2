@@ -41,7 +41,7 @@ class CarbonBrainServer {
     setupMiddleware() {
         // CORS配置
         this.app.use(cors({
-            origin: ['http://localhost:8081', 'http://localhost:3000'],
+            origin: ['http://localhost:8080', 'http://localhost:8081', 'http://localhost:3000'],
             credentials: true
         }));
 
@@ -50,7 +50,7 @@ class CarbonBrainServer {
         this.app.use(express.urlencoded({ extended: true }));
 
         // 静态文件服务
-        this.app.use(express.static(path.join(__dirname, '../../frontend')));
+        this.app.use(express.static(path.join(__dirname, '../frontend')));
 
         // 请求日志
         this.app.use((req, res, next) => {
