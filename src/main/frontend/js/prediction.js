@@ -23,14 +23,29 @@ class PredictionManager {
             this.showLoadingState(true);
             console.log('加载状态已设置');
 
-            // 调用真实AI预测 API
+            // 尝试调用真实AI预测 API
             console.log('调用AI预测 API...');
-            this.predictionData = await this.callPredictionAPI(modelType);
-            
-            // 如果没有真实数据，使用模拟数据
-            if (!this.predictionData) {
-                console.warn('使用模拟预测数据');
-                this.predictionData = window.MockData.getPredictionData();
+            try {
+                this.predictionData = await this.callPredictionAPI(modelType);
+                
+                // 如果API返回了数据，使用真实数据
+                if (this.predictionData) {
+                    console.log('使用真实AI预测数据');
+                } else {
+                    throw new Error('API返回空数据');
+                }
+            } catch (apiError) {
+                console.warn('API调用失败，使用模拟预测数据:', apiError.message);
+                this.predictionData = this.generateFallbackPrediction(modelType);
+                
+                // 显示备用数据提醒
+                if (window.CarbonBrainApp) {
+                    window.CarbonBrainApp.showNotification(
+                        'API连接失败',
+                        '使用模拟预测数据，功能演示正常',
+                        'warning'
+                    );
+                }
             }
             
             console.log('预测数据获取成功:', this.predictionData);
@@ -193,6 +208,54 @@ class PredictionManager {
             prediction: apiData.predictions || [],
             metadata: apiData.metadata || {},
             summary: apiData.summary || {}
+        };
+    }
+    
+    // 生成备用预测数据（当API失败时使用）
+    generateFallbackPrediction(modelType) {
+        const baseTime = new Date();
+        const predictions = [];
+        
+        // 根据模型类型设置不同的准确率
+        const modelAccuracy = {
+            'arima': 0.85,
+            'lgbm': 0.88,
+            'ensemble': 0.92
+        };
+        
+        const accuracy = modelAccuracy[modelType] || 0.87;
+        
+        // 生成24小时预测数据
+        for (let i = 1; i <= 24; i++) {
+            const timestamp = new Date(baseTime.getTime() + i * 60 * 60 * 1000);
+            const confidence = Math.max(0.6, 0.95 - (i * 0.015));
+            
+            // 生成具有轻微趋势的预测值
+            const baseCaptureRate = 87.5 + Math.sin(i / 4) * 3; // 添加周期性变化
+            const noise = (Math.random() - 0.5) * 2; // 随机噪声
+            
+            predictions.push({
+                timestamp: timestamp.toISOString(),
+                captureRate: Math.max(75, Math.min(95, baseCaptureRate + noise)),
+                energyConsumption: 3.2 + (Math.random() - 0.5) * 0.6,
+                methanolYield: 22 + (Math.random() - 0.5) * 4,
+                confidence: parseFloat(confidence.toFixed(3))
+            });
+        }
+        
+        return {
+            model: modelType,
+            accuracy: accuracy,
+            horizon: 24,
+            prediction: predictions,
+            metadata: {
+                source: 'fallback',
+                note: '模拟数据 - API不可用时的备用方案',
+                timestamp: baseTime.toISOString()
+            },
+            summary: {
+                prediction_quality: accuracy > 0.9 ? '高' : accuracy > 0.8 ? '中' : '低'
+            }
         };
     }
 
