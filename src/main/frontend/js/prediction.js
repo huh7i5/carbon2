@@ -38,13 +38,22 @@ class PredictionManager {
                 console.warn('API调用失败，使用模拟预测数据:', apiError.message);
                 this.predictionData = this.generateFallbackPrediction(modelType);
                 
-                // 显示备用数据提醒
+                // 显示备用数据提醒，区分不同情况
+                const isFileProtocol = !this.isHttpEnvironment();
                 if (window.CarbonBrainApp) {
-                    window.CarbonBrainApp.showNotification(
-                        'API连接失败',
-                        '使用模拟预测数据，功能演示正常',
-                        'warning'
-                    );
+                    if (isFileProtocol) {
+                        window.CarbonBrainApp.showNotification(
+                            '演示模式',
+                            '当前为离线演示，如需真实AI算法请启动完整服务',
+                            'info'
+                        );
+                    } else {
+                        window.CarbonBrainApp.showNotification(
+                            'API连接失败',
+                            '后端服务未启动，使用模拟数据演示',
+                            'warning'
+                        );
+                    }
                 }
             }
             
@@ -118,9 +127,20 @@ class PredictionManager {
         }
     }
 
+    // 检测是否在HTTP服务器环境中
+    isHttpEnvironment() {
+        return window.location.protocol === 'http:' || window.location.protocol === 'https:';
+    }
+    
     // 调用预测 API
     async callPredictionAPI(model) {
         console.log(`调用预测 API - 模型: ${model}`);
+        
+        // 检测运行环境
+        if (!this.isHttpEnvironment()) {
+            console.warn('检测到文件协议环境，无法连接API，建议启动完整服务');
+            throw new Error('需要HTTP服务器环境才能连接AI预测API');
+        }
         
         if (!this.apiClient) {
             console.warn('ApiClient 不可用，使用原生 fetch');
@@ -341,20 +361,31 @@ class PredictionManager {
     showPredictionComplete() {
         const accuracy = (this.predictionData.accuracy || 0.9) * 100;
         const modelName = this.predictionData.model || this.currentModel;
-        const message = `${modelName.toUpperCase()}模型预测完成，准确率${accuracy.toFixed(1)}%`;
+        const isSimulated = this.predictionData.metadata?.source === 'fallback';
+        
+        let message, type, statusText;
+        if (isSimulated) {
+            message = `${modelName.toUpperCase()}模拟预测完成，演示准确率${accuracy.toFixed(1)}%`;
+            type = 'warning';
+            statusText = '演示模式 - 模拟数据';
+        } else {
+            message = `${modelName.toUpperCase()}真实预测完成，算法准确率${accuracy.toFixed(1)}%`;
+            type = 'success';
+            statusText = '真实算法预测';
+        }
         
         console.log('AI预测完成:', message);
         
         if (window.CarbonBrainApp) {
             window.CarbonBrainApp.showNotification(
-                'AI预测',
+                isSimulated ? '演示预测' : 'AI算法预测',
                 message,
-                'success'
+                type
             );
         }
         
         // 更新状态显示
-        this.updatePredictionStatus('预测完成', 'success');
+        this.updatePredictionStatus(statusText, type);
     }
     
     // 更新预测状态显示
