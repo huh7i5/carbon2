@@ -187,7 +187,8 @@ class CarbonBrainApp {
         const predictionBtn = document.querySelector('.prediction-controls .btn-primary');
         if (predictionBtn) {
             predictionBtn.addEventListener('click', () => {
-                this.runPrediction();
+                // 预测功能由 PredictionManager 处理
+                // this.runPrediction();
             });
         }
 
@@ -314,32 +315,10 @@ class CarbonBrainApp {
         console.log('显示收益趋势分析');
     }
 
-    // 运行AI预测
-    runPrediction() {
-        const btn = document.querySelector('.prediction-controls .btn-primary');
-        const originalText = btn.innerHTML;
-        
-        // 显示加载状态
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 预测中...';
-        btn.disabled = true;
-        
-        setTimeout(() => {
-            // 更新预测数据
-            window.ChartManager.initPredictionChart();
-            
-            // 更新预测指标
-            const nextHourPrediction = document.getElementById('nextHourPrediction');
-            if (nextHourPrediction) {
-                nextHourPrediction.textContent = `${(87.5 + (Math.random() - 0.5) * 5).toFixed(1)}%`;
-            }
-            
-            // 恢复按钮状态
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            
-            this.showNotification('AI预测', '预测模型运行完成', 'success');
-        }, 2000);
-    }
+    // 运行AI预测 (已移除 - 由 PredictionManager 处理)
+    // runPrediction() {
+    //     此方法已被 PredictionManager.runPrediction() 替代
+    // }
 
     // 发送聊天消息
     sendMessage() {

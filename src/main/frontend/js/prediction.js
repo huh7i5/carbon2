@@ -16,12 +16,15 @@ class PredictionManager {
 
         this.isRunning = true;
         const modelType = model || this.currentModel;
+        console.log(`开始运行${modelType.toUpperCase()}预测...`);
 
         try {
             // 显示加载状态
             this.showLoadingState(true);
+            console.log('加载状态已设置');
 
             // 调用真实AI预测 API
+            console.log('调用AI预测 API...');
             this.predictionData = await this.callPredictionAPI(modelType);
             
             // 如果没有真实数据，使用模拟数据
@@ -29,6 +32,8 @@ class PredictionManager {
                 console.warn('使用模拟预测数据');
                 this.predictionData = window.MockData.getPredictionData();
             }
+            
+            console.log('预测数据获取成功:', this.predictionData);
 
             // 更新预测图表
             this.updatePredictionChart();
@@ -45,24 +50,46 @@ class PredictionManager {
             console.error('预测失败:', error);
             this.showPredictionError(error.message);
         } finally {
+            console.log('清理运行状态...');
             this.isRunning = false;
             this.showLoadingState(false);
+            console.log('加载状态已重置');
         }
     }
 
     // 显示加载状态
     showLoadingState(isLoading) {
-        const btn = document.querySelector('.prediction-controls .btn-primary');
-        if (!btn) return;
+        // 多种选择器尝试
+        const btnSelectors = [
+            '.prediction-controls .btn-primary',
+            '.predict-btn',
+            '[onclick*="runPrediction"]',
+            'button[class*="predict"]'
+        ];
+        
+        let btn = null;
+        for (const selector of btnSelectors) {
+            btn = document.querySelector(selector);
+            if (btn) break;
+        }
+        
+        if (!btn) {
+            console.warn('找不到预测按钮，尝试的选择器:', btnSelectors);
+            return;
+        }
+        
+        console.log(`设置按钮状态: ${isLoading ? '加载中' : '正常'}`);
 
         if (isLoading) {
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 预测中...';
             btn.disabled = true;
             btn.style.opacity = '0.7';
+            btn.classList.add('loading');
         } else {
             btn.innerHTML = '<i class="fas fa-play"></i> 运行预测';
             btn.disabled = false;
             btn.style.opacity = '1';
+            btn.classList.remove('loading');
         }
     }
 
@@ -78,17 +105,22 @@ class PredictionManager {
 
     // 调用预测 API
     async callPredictionAPI(model) {
+        console.log(`调用预测 API - 模型: ${model}`);
+        
         if (!this.apiClient) {
             console.warn('ApiClient 不可用，使用原生 fetch');
             return await this.callPredictionWithFetch(model);
         }
         
         try {
+            console.log('使用 ApiClient 调用预测 API...');
             const response = await this.apiClient.post('/ai/predict', {
                 model: model,
                 horizon: 24,
                 metrics: ['co2_capture_rate', 'energy_consumption', 'methanol_yield']
             });
+            
+            console.log('API 响应:', response);
             
             if (response.success) {
                 console.log('AI预测成功:', response.data);
@@ -100,38 +132,55 @@ class PredictionManager {
             
         } catch (error) {
             console.error('调用预测 API 失败:', error);
-            return null;
+            // 尝试使用 fetch 备用方案
+            console.log('尝试使用 fetch 备用方案...');
+            return await this.callPredictionWithFetch(model);
         }
     }
     
     // 使用原生 fetch 调用预测 API
     async callPredictionWithFetch(model) {
         try {
+            console.log(`使用 fetch 调用预测 API - 模型: ${model}`);
+            
+            const requestBody = {
+                model: model,
+                horizon: 24,
+                metrics: ['co2_capture_rate', 'energy_consumption', 'methanol_yield']
+            };
+            
+            console.log('请求数据:', requestBody);
+            
             const response = await fetch('/api/ai/predict', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    model: model,
-                    horizon: 24,
-                    metrics: ['co2_capture_rate', 'energy_consumption', 'methanol_yield']
-                })
+                body: JSON.stringify(requestBody)
             });
             
+            if (!response.ok) {
+                throw new Error(`HTTP 错误: ${response.status} ${response.statusText}`);
+            }
+            
             const data = await response.json();
+            console.log('Fetch API 响应:', data);
             
             if (data.success) {
                 console.log('AI预测成功 (原生 fetch):', data.data);
                 return this.transformAPIResponse(data.data);
             } else {
                 console.error('AI预测 API 错误:', data.error);
+                if (data.fallback) {
+                    console.log('使用备用数据');
+                    return this.transformAPIResponse(data.data);
+                }
                 return null;
             }
             
         } catch (error) {
             console.error('调用预测 API 失败 (原生 fetch):', error);
-            return null;
+            throw error; // 向上抛出错误以触发 finally 块
         }
     }
     
@@ -228,7 +277,10 @@ class PredictionManager {
     // 显示预测完成状态
     showPredictionComplete() {
         const accuracy = (this.predictionData.accuracy || 0.9) * 100;
-        const message = `${this.currentModel.toUpperCase()}模型预测完成，准确率${accuracy.toFixed(1)}%`;
+        const modelName = this.predictionData.model || this.currentModel;
+        const message = `${modelName.toUpperCase()}模型预测完成，准确率${accuracy.toFixed(1)}%`;
+        
+        console.log('AI预测完成:', message);
         
         if (window.CarbonBrainApp) {
             window.CarbonBrainApp.showNotification(
@@ -236,20 +288,36 @@ class PredictionManager {
                 message,
                 'success'
             );
-        } else {
-            console.log('AI预测完成:', message);
+        }
+        
+        // 更新状态显示
+        this.updatePredictionStatus('预测完成', 'success');
+    }
+    
+    // 更新预测状态显示
+    updatePredictionStatus(status, type = 'info') {
+        const statusElement = document.getElementById('predictionStatus');
+        if (statusElement) {
+            statusElement.textContent = status;
+            statusElement.className = `prediction-status ${type}`;
         }
     }
 
     // 显示预测错误
     showPredictionError(message) {
+        const errorMsg = message || '预测模型运行失败，请稍后重试';
+        console.error('预测错误:', errorMsg);
+        
         if (window.CarbonBrainApp) {
             window.CarbonBrainApp.showNotification(
                 '预测失败',
-                message || '预测模型运行失败，请稍后重试',
+                errorMsg,
                 'error'
             );
         }
+        
+        // 更新状态显示
+        this.updatePredictionStatus('预测失败', 'error');
     }
 
     // 切换预测模型
@@ -404,6 +472,16 @@ class PredictionManager {
 
 // 全局实例
 window.PredictionManager = new PredictionManager();
+
+// 初始化预测管理器
+document.addEventListener('DOMContentLoaded', function() {
+    // 确保下拉菜单与当前模型同步
+    const modelSelect = document.getElementById('predictionModel');
+    if (modelSelect) {
+        modelSelect.value = window.PredictionManager.currentModel;
+        console.log(`预测模型初始化为: ${window.PredictionManager.currentModel}`);
+    }
+});
 
 // 全局函数（供HTML调用）
 window.runPrediction = function() {

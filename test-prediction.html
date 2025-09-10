@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI预测模块测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-primary:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        select {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .prediction-status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .prediction-status.success { background: #d4edda; color: #155724; }
+        .prediction-status.error { background: #f8d7da; color: #721c24; }
+        .prediction-status.info { background: #d1ecf1; color: #0c5460; }
+        .log {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI预测模块测试</h1>
+    
+    <div class="test-section">
+        <h2>预测控制</h2>
+        <div class="prediction-controls">
+            <button class="btn-primary" onclick="runPrediction()">
+                <i class="fas fa-play"></i> 运行预测
+            </button>
+            <select id="predictionModel" onchange="changePredictionModel(this.value)">
+                <option value="arima">ARIMA模型</option>
+                <option value="lgbm">LightGBM模型</option>
+                <option value="ensemble" selected>集成预测模型</option>
+            </select>
+            <button class="btn-primary" onclick="testAIPrediction()">
+                测试API连接
+            </button>
+        </div>
+        <div id="predictionStatus" class="prediction-status info">
+            等待预测...
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>预测指标</h2>
+        <div>
+            <p>当前模型: <span id="currentModel">ensemble</span></p>
+            <p>预测准确率: <span id="accuracy">--</span></p>
+            <p>下一小时预测: <span id="nextHourPrediction">--</span></p>
+            <p>趋势方向: <span id="trendDirection">--</span></p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>控制台日志</h2>
+        <div id="consoleLog" class="log">
+            等待日志输出...
+        </div>
+        <button class="btn-primary" onclick="clearLog()">清空日志</button>
+    </div>
+
+    <!-- 模拟数据 -->
+    <script>
+        // 简单的模拟数据
+        window.MockData = {
+            getPredictionData: function() {
+                return {
+                    accuracy: 0.87,
+                    prediction: [
+                        { predicted: 87.5, confidence: 0.9 },
+                        { predicted: 86.8, confidence: 0.85 }
+                    ]
+                };
+            }
+        };
+        
+        // 模拟通知系统
+        window.CarbonBrainApp = {
+            showNotification: function(title, message, type) {
+                const status = document.getElementById('predictionStatus');
+                if (status) {
+                    status.textContent = `${title}: ${message}`;
+                    status.className = `prediction-status ${type}`;
+                }
+                logToConsole(`通知: ${title} - ${message} (${type})`);
+            }
+        };
+        
+        // 控制台日志捕获
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        
+        function logToConsole(message) {
+            const logDiv = document.getElementById('consoleLog');
+            if (logDiv) {
+                const timestamp = new Date().toLocaleTimeString();
+                logDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+        }
+        
+        console.log = function(...args) {
+            logToConsole('LOG: ' + args.join(' '));
+            originalConsoleLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            logToConsole('ERROR: ' + args.join(' '));
+            originalConsoleError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            logToConsole('WARN: ' + args.join(' '));
+            originalConsoleWarn.apply(console, args);
+        };
+        
+        function clearLog() {
+            document.getElementById('consoleLog').innerHTML = '';
+        }
+    </script>
+    
+    <!-- 加载实际的预测模块 -->
+    <script src="src/main/frontend/js/prediction.js"></script>
+    
+    <script>
+        // 测试初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            logToConsole('测试页面初始化完成');
+            logToConsole(`当前模型: ${window.PredictionManager.currentModel}`);
+            
+            // 更新显示
+            document.getElementById('currentModel').textContent = window.PredictionManager.currentModel;
+        });
+    </script>
+</body>
+</html>

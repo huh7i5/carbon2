@@ -177,9 +177,10 @@
                     <button class="btn-primary" onclick="runPrediction()">
                         <i class="fas fa-play"></i> 运行预测
                     </button>
-                    <select id="predictionModel">
+                    <select id="predictionModel" onchange="changePredictionModel(this.value)">
                         <option value="arima">ARIMA模型</option>
                         <option value="lgbm">LightGBM模型</option>
+                        <option value="ensemble" selected>集成预测模型</option>
                     </select>
                 </div>
             </div>
