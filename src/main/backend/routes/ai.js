@@ -105,9 +105,22 @@ async function runAdvancedPrediction(model, horizon, metrics) {
             '--model', model
         ];
         
-        console.log('执行Python预测:', 'python3', args.join(' '));
+        // 检测可用的Python命令
+        let pythonCmd = 'python3';
+        try {
+            require('child_process').execSync('python3 --version', { stdio: 'ignore' });
+        } catch (e) {
+            try {
+                require('child_process').execSync('python --version', { stdio: 'ignore' });
+                pythonCmd = 'python';
+            } catch (e2) {
+                throw new Error('Python环境不可用');
+            }
+        }
         
-        const pythonProcess = spawn('python3', args);
+        console.log('执行Python预测:', pythonCmd, args.join(' '));
+        
+        const pythonProcess = spawn(pythonCmd, args);
         
         let stdout = '';
         let stderr = '';

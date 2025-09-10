@@ -74,9 +74,23 @@ class DataService {
     // 初始化Python模块
     async initializePythonModules() {
         try {
-            // 检查Python是否可用
-            await execAsync('python3 --version');
-            console.log('Python3 环境检查通过');
+            // 检查Python是否可用 (优先python3，fallback到python)
+            let pythonCmd = 'python3';
+            try {
+                await execAsync('python3 --version');
+                console.log('Python3 环境检查通过');
+            } catch (e1) {
+                try {
+                    await execAsync('python --version');
+                    pythonCmd = 'python';
+                    console.log('Python 环境检查通过');
+                } catch (e2) {
+                    throw new Error('Python环境不可用');
+                }
+            }
+            
+            // 保存Python命令供后续使用
+            this.pythonCmd = pythonCmd;
             
             // 生成基础数据
             const generateScript = path.join(this.pythonPath, 'data_generation/generate_base_data.py');
@@ -87,6 +101,7 @@ class DataService {
         } catch (error) {
             console.warn('Python环境初始化警告:', error.message);
             console.log('将使用内置模拟数据生成器');
+            this.pythonCmd = null;
         }
     }
 
@@ -190,7 +205,7 @@ if __name__ == "__main__":
             // 尝试使用Python生成数据
             try {
                 const scriptPath = path.join(this.pythonPath, 'data_generation/generate_base_data.py');
-                await execAsync(`python3 "${scriptPath}" "${dataDir}"`);
+                await execAsync(`${this.pythonCmd} "${scriptPath}" "${dataDir}"`);
                 console.log('使用Python生成初始数据成功');
                 return;
             } catch (pythonError) {
