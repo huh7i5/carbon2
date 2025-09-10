@@ -424,8 +424,17 @@ class PredictionManager {
         this.currentModel = model;
         console.log(`切换到${model.toUpperCase()}模型`);
         
+        // 清空之前的预测数据，确保显示新模型的结果
+        this.predictionData = null;
+        
         // 更新界面模型显示
         this.updateModelDisplay(model);
+        
+        // 清空准确率显示，避免显示旧数据
+        const accuracyElement = document.getElementById('accuracy');
+        if (accuracyElement) {
+            accuracyElement.textContent = '计算中...';
+        }
         
         // 重新运行预测
         this.runPrediction(model);
